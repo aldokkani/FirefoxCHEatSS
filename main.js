@@ -2,15 +2,16 @@ console.log('hello main');
 (function() {
     let sf;
     let _wsInstance;
-    let isWhite = true;
+    let playerColor = 'w';
     let sentMove;
-    let movesCounter = 0;
-    const move = { t: 'move', d: { u: '', a: 1 } };
+    let movesCounter = 1;
+    const move = { t: 'move', d: { u: '', a: 0 } };
 
     sf = new Worker('assets/_nqpAj6/vendor/stockfish.js/stockfish.wasm.js');
     sf.onmessage = function onmessage({ data }) {
         if (data.indexOf('bestmove') > -1) {
             move.d.u = data.split(' ')[1];
+            move.d.a = Math.ceil(movesCounter / 2);
             _wsInstance.send(JSON.stringify(move));
             console.log('move ===> ', JSON.stringify(move));
         }
@@ -18,8 +19,7 @@ console.log('hello main');
 
     function calculate({ fen, clock }) {
         if (sf !== undefined) {
-            const color = isWhite ? 'w' : 'b';
-            sf.postMessage(`position fen ${fen} ${color}`);
+            sf.postMessage(`position fen ${fen} ${playerColor}`);
             sf.postMessage(`go wtime ${clock.white * 1000} btime ${clock.black * 1000}`);
         }
     }
@@ -48,15 +48,12 @@ console.log('hello main');
             const dataObj = JSON.parse(event.data);
             if (dataObj && dataObj.t === 'move') {
                 if (sentMove === undefined) {
-                    isWhite = false;
+                    playerColor = 'b';
                 }
                 if (dataObj.d.uci !== sentMove) {
                     calculate(dataObj.d);
                 }
                 movesCounter++;
-                if (movesCounter % 2 === 0) {
-                    move.d.a++;
-                }
             }
         });
         return ws;
