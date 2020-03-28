@@ -16,15 +16,11 @@ console.log('hello main');
         }
     };
 
-    function calculate(fen) {
+    function calculate({ fen, clock }) {
         if (sf !== undefined) {
             const color = isWhite ? 'w' : 'b';
             sf.postMessage(`position fen ${fen} ${color}`);
-            sf.postMessage('go ponder');
-
-            setTimeout(function() {
-                sf.postMessage('stop');
-            }, 500);
+            sf.postMessage(`go wtime ${clock.white * 1000} btime ${clock.black * 1000}`);
         }
     }
     // ========================================================== //
@@ -55,7 +51,7 @@ console.log('hello main');
                     isWhite = false;
                 }
                 if (dataObj.d.uci !== sentMove) {
-                    calculate(dataObj.d.fen);
+                    calculate(dataObj.d);
                 }
                 movesCounter++;
                 if (movesCounter % 2 === 0) {
