@@ -4,6 +4,9 @@ console.log('hello main');
     let _wsInstance;
     let playerColor = 'w';
     let sentMove;
+    let castlingFen = 'KQkq';
+    const wCastlingMovies = ['e1h1', 'e1a1'];
+    const bCastlingMovies = ['e8h8', 'e8a8'];
     let movesCounter = 1;
     const move = { t: 'move', d: { u: '', a: 0 } };
 
@@ -19,7 +22,7 @@ console.log('hello main');
 
     function calculate({ fen, clock }) {
         if (sf !== undefined) {
-            sf.postMessage(`position fen ${fen} ${playerColor}`);
+            sf.postMessage(`position fen ${fen} ${playerColor} ${castlingFen}`);
             sf.postMessage(`go wtime ${clock.white * 1000} btime ${clock.black * 1000}`);
         }
     }
@@ -43,15 +46,22 @@ console.log('hello main');
             ws = new OrigWebSocket();
         }
 
-        wsAddListener(ws, 'message', function(event) {
+        wsAddListener(ws, 'message', function({ data }) {
             // TODO: Do something with event.data (received data) if you wish.
-            const dataObj = JSON.parse(event.data);
-            if (dataObj && dataObj.t === 'move') {
+            const { t, d } = JSON.parse(data);
+            if (t === 'move') {
                 if (sentMove === undefined) {
                     playerColor = 'b';
                 }
-                if (dataObj.d.uci !== sentMove) {
-                    calculate(dataObj.d);
+                if (castlingFen.length > 0) {
+                    if (wCastlingMovies.includes(d.uci)) {
+                        castlingFen = castlingFen.replace('KQ', '');
+                    } else if (bCastlingMovies.includes(d.uci)) {
+                        castlingFen = castlingFen.replace('kq', '');
+                    }
+                }
+                if (d.uci !== sentMove) {
+                    calculate(d);
                 }
                 movesCounter++;
             }
