@@ -7,21 +7,15 @@ console.log('hello main');
     let movesCounter = 0;
     const move = { t: 'move', d: { u: '', a: 1 } };
 
-    fetch('https://nmrugg.github.io/kingdom/js/stockfish6.js').then(res => {
-        console.log('status ===> ', res.status);
-        res.text().then(data => {
-            console.log('Stockfish is ready!');
-            sf = new Worker(URL.createObjectURL(new Blob([data], { type: 'application/javascript' })));
+    sf = new Worker('assets/_nqpAj6/vendor/stockfish.js/stockfish.wasm.js');
+    sf.onmessage = function onmessage({ data }) {
+        if (data.indexOf('bestmove') > -1) {
+            move.d.u = data.split(' ')[1];
+            _wsInstance.send(JSON.stringify(move));
+            console.log('move ===> ', JSON.stringify(move));
+        }
+    };
 
-            sf.onmessage = function onmessage({ data }) {
-                if (data.indexOf('bestmove') > -1) {
-                    move.d.u = data.split(' ')[1];
-                    _wsInstance.send(JSON.stringify(move));
-                    console.log('move ===> ', JSON.stringify(move));
-                }
-            };
-        });
-    });
     function calculate(fen) {
         if (sf !== undefined) {
             const color = isWhite ? 'w' : 'b';
