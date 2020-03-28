@@ -1,7 +1,10 @@
 console.log('hello main');
 (function() {
     let sf;
-    
+    let _wsInstance;
+    let flag = true;
+    const move = { t: 'move', d: { u: '', a: 1 } };
+
     fetch('https://nmrugg.github.io/kingdom/js/stockfish6.js').then(res => {
         console.log('status ===> ', res.status);
         res.text().then(data => {
@@ -10,6 +13,10 @@ console.log('hello main');
             sf.onmessage = function onmessage({ data }) {
                 if (data.indexOf('bestmove') > -1) {
                     console.log(data);
+                    move.d.u = data.split(' ')[1];
+                    _wsInstance.send(JSON.stringify(move));
+                    console.log('move ===> ', JSON.stringify(move));
+                    move.d.a++;
                 }
             };
         });
@@ -49,7 +56,10 @@ console.log('hello main');
             const dataObj = JSON.parse(event.data);
             if (dataObj && dataObj.t === 'move') {
                 // console.log('received ====>', dataObj.d);
-                calculate(dataObj.d.fen);
+                if (flag) {
+                    calculate(dataObj.d.fen);
+                }
+                flag = !flag
             }
         });
         return ws;
@@ -65,6 +75,7 @@ console.log('hello main');
         if (dataObj && dataObj.t === 'move') {
             // console.log('sent ====>', dataObj);
         }
+        _wsInstance = this;
         return wsSend(this, arguments);
     };
 
