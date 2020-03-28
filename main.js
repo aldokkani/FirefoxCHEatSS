@@ -4,7 +4,8 @@ console.log('hello main');
     let _wsInstance;
     let isWhite = true;
     let sentMove;
-    const move = { t: 'move', d: { u: '', a: 0 } };
+    let movesCounter = 0;
+    const move = { t: 'move', d: { u: '', a: 1 } };
 
     fetch('https://nmrugg.github.io/kingdom/js/stockfish6.js').then(res => {
         console.log('status ===> ', res.status);
@@ -61,6 +62,9 @@ console.log('hello main');
                 }
                 if (dataObj.d.uci !== sentMove) {
                     calculate(dataObj.d.fen);
+                }
+                movesCounter++;
+                if (movesCounter % 2 === 0) {
                     move.d.a++;
                 }
             }
