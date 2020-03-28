@@ -2,33 +2,34 @@ console.log('hello main');
 (function() {
     let sf;
     let _wsInstance;
-    let flag = true;
-    const move = { t: 'move', d: { u: '', a: 1 } };
+    let isWhite = true;
+    let sentMove;
+    const move = { t: 'move', d: { u: '', a: 0 } };
 
     fetch('https://nmrugg.github.io/kingdom/js/stockfish6.js').then(res => {
         console.log('status ===> ', res.status);
         res.text().then(data => {
-            console.log('data ===> ', data.length);
+            console.log('Stockfish is ready!');
             sf = new Worker(URL.createObjectURL(new Blob([data], { type: 'application/javascript' })));
+
             sf.onmessage = function onmessage({ data }) {
                 if (data.indexOf('bestmove') > -1) {
-                    console.log(data);
                     move.d.u = data.split(' ')[1];
                     _wsInstance.send(JSON.stringify(move));
                     console.log('move ===> ', JSON.stringify(move));
-                    move.d.a++;
                 }
             };
         });
     });
     function calculate(fen) {
         if (sf !== undefined) {
-            sf.postMessage('position fen ' + fen);
+            const color = isWhite ? 'w' : 'b';
+            sf.postMessage(`position fen ${fen} ${color}`);
             sf.postMessage('go ponder');
 
             setTimeout(function() {
                 sf.postMessage('stop');
-            }, 1000);
+            }, 500);
         }
     }
     // ========================================================== //
@@ -55,11 +56,13 @@ console.log('hello main');
             // TODO: Do something with event.data (received data) if you wish.
             const dataObj = JSON.parse(event.data);
             if (dataObj && dataObj.t === 'move') {
-                // console.log('received ====>', dataObj.d);
-                if (flag) {
-                    calculate(dataObj.d.fen);
+                if (sentMove === undefined) {
+                    isWhite = false;
                 }
-                flag = !flag
+                if (dataObj.d.uci !== sentMove) {
+                    calculate(dataObj.d.fen);
+                    move.d.a++;
+                }
             }
         });
         return ws;
@@ -73,7 +76,7 @@ console.log('hello main');
         // TODO: Do something with the sent data if you wish.
         const dataObj = JSON.parse(data);
         if (dataObj && dataObj.t === 'move') {
-            // console.log('sent ====>', dataObj);
+            sentMove = dataObj.d.u;
         }
         _wsInstance = this;
         return wsSend(this, arguments);
