@@ -1,5 +1,5 @@
-console.log('hello main');
-(function() {
+console.log('CHEatSS is on!');
+(function () {
     let sf;
     let _wsInstance;
     let playerColor = 'w';
@@ -46,7 +46,7 @@ console.log('hello main');
             ws = new OrigWebSocket();
         }
 
-        wsAddListener(ws, 'message', function({ data }) {
+        wsAddListener(ws, 'message', function ({ data }) {
             // TODO: Do something with event.data (received data) if you wish.
             const { t, d } = JSON.parse(data);
             if (t === 'move') {
@@ -73,7 +73,7 @@ console.log('hello main');
 
     var wsSend = OrigWebSocket.prototype.send;
     wsSend = wsSend.apply.bind(wsSend);
-    OrigWebSocket.prototype.send = function(data) {
+    OrigWebSocket.prototype.send = function (data) {
         // TODO: Do something with the sent data if you wish.
         const dataObj = JSON.parse(data);
         if (dataObj && dataObj.t === 'move') {
