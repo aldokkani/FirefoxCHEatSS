@@ -9,6 +9,8 @@ console.log('CHEatSS is on!');
     const bCastlingMovies = ['e8h8', 'e8a8'];
     let movesCounter = 1;
     const move = { t: 'move', d: { u: '', a: 0 } };
+    const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
+    let enPassant = '-';
 
     sf = new Worker('assets/_nqpAj6/vendor/stockfish.js/stockfish.wasm.js');
     sf.onmessage = function onmessage({ data }) {
@@ -22,8 +24,20 @@ console.log('CHEatSS is on!');
 
     function calculate({ fen, clock }) {
         if (sf !== undefined) {
-            sf.postMessage(`position fen ${fen} ${playerColor} ${castlingFen}`);
+            sf.postMessage(`position fen ${fen} ${playerColor} ${castlingFen} ${enPassant}`);
             sf.postMessage(`go wtime ${clock.white * 1000} btime ${clock.black * 1000}`);
+        }
+    }
+
+    function setEnPassant(move) {
+        const index = PAWNS.indexOf(move.slice(0, 2));
+        enPassant = '-';
+        if (index > -1) {
+            PAWNS.splice(index, 1);
+            if (Math.abs(move[1] - move[3]) === 2) {
+                enPassant = move[0];
+                enPassant += move[1] === '2' ? '3' : '6';
+            }
         }
     }
     // ========================================================== //
@@ -53,6 +67,7 @@ console.log('CHEatSS is on!');
                 if (sentMove === undefined) {
                     playerColor = 'b';
                 }
+                setEnPassant(d.uci);
                 if (castlingFen.length > 0) {
                     if (wCastlingMovies.includes(d.uci)) {
                         castlingFen = castlingFen.replace('KQ', '');
