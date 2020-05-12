@@ -5,8 +5,6 @@ console.log('CHEatSS is on!');
     let playerColor = 'w';
     let sentMove;
     let castlingFen = 'KQkq';
-    const wCastlingMovies = ['e1h1', 'e1a1'];
-    const bCastlingMovies = ['e8h8', 'e8a8'];
     let movesCounter = 1;
     const move = { t: 'move', d: { u: '', a: 0 } };
     const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
@@ -24,6 +22,9 @@ console.log('CHEatSS is on!');
 
     function calculate({ fen, clock }) {
         if (sf !== undefined) {
+            if (movesCounter < 3) {
+                clock.white = clock.black = 15;
+            }
             sf.postMessage(`position fen ${fen} ${playerColor} ${castlingFen} ${enPassant}`);
             sf.postMessage(`go wtime ${clock.white * 1000} btime ${clock.black * 1000}`);
         }
@@ -69,9 +70,9 @@ console.log('CHEatSS is on!');
                 }
                 setEnPassant(d.uci);
                 if (castlingFen.length > 0) {
-                    if (wCastlingMovies.includes(d.uci)) {
+                    if (d.uci.includes('e1')) {
                         castlingFen = castlingFen.replace('KQ', '');
-                    } else if (bCastlingMovies.includes(d.uci)) {
+                    } else if (d.uci.includes('e8')) {
                         castlingFen = castlingFen.replace('kq', '');
                     }
                 }
