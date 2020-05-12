@@ -2,16 +2,20 @@ console.log('CHEatSS is on!');
 (function () {
     let sf;
     let _wsInstance;
-    let playerColor = 'w';
+    const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
+    const move = { t: 'move', d: { u: '', a: 0 } };
+    const variant = ['chess', 'giveaway', 'horde', 'atomic', 'kingofthehill', 'racingkings', '3check', 'crazyhouse'][1];
     let sentMove;
+    let enPassant = '-';
+    let playerColor = 'w';
     let castlingFen = 'KQkq';
     let movesCounter = 1;
-    const move = { t: 'move', d: { u: '', a: 0 } };
-    const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
-    let enPassant = '-';
 
     sf = new Worker('assets/_nqpAj6/vendor/stockfish.js/stockfish.wasm.js');
+    sf.postMessage(`setoption name UCI_Variant value ${variant}`);
+
     sf.onmessage = function onmessage({ data }) {
+        if (data.startsWith('info string variant')) console.log(data);
         if (data.indexOf('bestmove') > -1) {
             move.d.u = data.split(' ')[1];
             move.d.a = Math.ceil(movesCounter / 2);
