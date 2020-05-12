@@ -4,7 +4,7 @@ console.log('CHEatSS is on!');
     let _wsInstance;
     const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
     const move = { t: 'move', d: { u: '', a: 0 } };
-    const variant = ['chess', 'giveaway', 'horde', 'atomic', 'kingofthehill', 'racingkings', '3check', 'crazyhouse'][1];
+    const variant = ['chess', 'giveaway', 'horde', 'atomic', 'kingofthehill', 'racingkings', '3check', 'crazyhouse'][0];
     let sentMove;
     let enPassant = '-';
     let playerColor = 'w';
@@ -45,6 +45,27 @@ console.log('CHEatSS is on!');
             }
         }
     }
+
+    function play(data) {
+        const { t, d } = JSON.parse(data);
+        if (t === 'move') {
+            if (sentMove === undefined) {
+                playerColor = 'b';
+            }
+            setEnPassant(d.uci);
+            if (castlingFen.length > 0) {
+                if (d.uci.includes('e1')) {
+                    castlingFen = castlingFen.replace('KQ', '');
+                } else if (d.uci.includes('e8')) {
+                    castlingFen = castlingFen.replace('kq', '');
+                }
+            }
+            if (d.uci !== sentMove) {
+                calculate(d);
+            }
+            movesCounter++;
+        }
+    }
     // ========================================================== //
 
     var OrigWebSocket = window.WebSocket;
@@ -67,24 +88,7 @@ console.log('CHEatSS is on!');
 
         wsAddListener(ws, 'message', function ({ data }) {
             // TODO: Do something with event.data (received data) if you wish.
-            const { t, d } = JSON.parse(data);
-            if (t === 'move') {
-                if (sentMove === undefined) {
-                    playerColor = 'b';
-                }
-                setEnPassant(d.uci);
-                if (castlingFen.length > 0) {
-                    if (d.uci.includes('e1')) {
-                        castlingFen = castlingFen.replace('KQ', '');
-                    } else if (d.uci.includes('e8')) {
-                        castlingFen = castlingFen.replace('kq', '');
-                    }
-                }
-                if (d.uci !== sentMove) {
-                    calculate(d);
-                }
-                movesCounter++;
-            }
+            play(data);
         });
         return ws;
     }.bind();
