@@ -3,7 +3,6 @@
     "name": "CHEatSS",
     "version": "1.0",
     "description": "Stockfish Cheat Engine for lichess.org",
-    "permissions": ["*://*/*"],
     "content_scripts": [
         {
             "matches": ["*://lichess.org/*"],
