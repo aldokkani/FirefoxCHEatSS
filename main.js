@@ -3,8 +3,10 @@ console.log('CHEatSS is on!');
     let sf;
     let _wsInstance;
     const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
-    const move = { t: 'move', d: { u: '', a: 0 } };
-    const variant = ['chess', 'giveaway', 'horde', 'atomic', 'kingofthehill', 'racingkings', '3check', 'crazyhouse'][0];
+    const PIECES = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' };
+    const PIECES_KEYS = { queen: 'q', rook: 'r', bishop: 'b', knight: 'n', pawn: 'p' };
+    const variant = ['chess', 'giveaway', 'horde', 'atomic', 'kingofthehill', 'racingkings', '3check', 'crazyhouse'][4];
+    let pocketFen = '';
     let sentMove;
     let enPassant = '-';
     let playerColor = 'w';
@@ -17,7 +19,15 @@ console.log('CHEatSS is on!');
     sf.onmessage = function onmessage({ data }) {
         if (data.startsWith('info string variant')) console.log(data);
         if (data.indexOf('bestmove') > -1) {
-            move.d.u = data.split(' ')[1];
+            const move = { t: 'move', d: {} };
+            const recommendedMove = data.split(' ')[1];
+            if (variant === 'crazyhouse' && recommendedMove.indexOf('@') > -1) {
+                const [role, pos] = recommendedMove.split('@');
+                move.t = 'drop';
+                move.d.role = PIECES[role.toLowerCase()];
+                move.d.pos = pos;
+            }
+            move.d.u = recommendedMove;
             move.d.a = Math.ceil(movesCounter / 2);
             _wsInstance.send(JSON.stringify(move));
             console.log('move ===> ', JSON.stringify(move));
@@ -29,7 +39,7 @@ console.log('CHEatSS is on!');
             if (movesCounter < 3) {
                 clock.white = clock.black = 15;
             }
-            sf.postMessage(`position fen ${fen} ${playerColor} ${castlingFen} ${enPassant}`);
+            sf.postMessage(`position fen ${fen}${pocketFen} ${playerColor} ${castlingFen} ${enPassant}`);
             sf.postMessage(`go wtime ${clock.white * 1000} btime ${clock.black * 1000}`);
         }
     }
@@ -46,11 +56,26 @@ console.log('CHEatSS is on!');
         }
     }
 
+    function createPocket(whitePocket, blackPocket) {
+        let tempPocket = '[';
+        for (const key in whitePocket) {
+            tempPocket += PIECES_KEYS[key].repeat(whitePocket[key]).toUpperCase();
+        }
+        for (const key in blackPocket) {
+            tempPocket += PIECES_KEYS[key].repeat(blackPocket[key]).toLowerCase();
+        }
+        tempPocket += ']';
+        return tempPocket;
+    }
+
     function play(data) {
         const { t, d } = JSON.parse(data);
-        if (t === 'move') {
+        if (t === 'move' || t === 'drop') {
             if (sentMove === undefined) {
                 playerColor = 'b';
+            }
+            if (variant === 'crazyhouse') {
+                pocketFen = createPocket(...d.crazyhouse.pockets);
             }
             setEnPassant(d.uci);
             if (castlingFen.length > 0) {
@@ -100,7 +125,7 @@ console.log('CHEatSS is on!');
     OrigWebSocket.prototype.send = function (data) {
         // TODO: Do something with the sent data if you wish.
         const dataObj = JSON.parse(data);
-        if (dataObj && dataObj.t === 'move') {
+        if (dataObj && (dataObj.t === 'move' || dataObj.t === 'drop')) {
             sentMove = dataObj.d.u;
         }
         _wsInstance = this;
