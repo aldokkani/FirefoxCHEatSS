@@ -3,6 +3,15 @@
     "name": "CHEatSS",
     "version": "1.0",
     "description": "Stockfish Cheat Engine for lichess.org",
+    "icons": {
+        "48": "icons/logo.png"
+    },
+    "permissions": ["activeTab"],
+    "browser_action": {
+        "default_icon": "icons/logo.png",
+        "default_title": "CHEatSS",
+        "default_popup": "popup/choose_variant.html"
+    },
     "content_scripts": [
         {
             "matches": ["*://lichess.org/*"],

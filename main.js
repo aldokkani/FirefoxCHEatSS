@@ -5,7 +5,6 @@ console.log('CHEatSS is on!');
     const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
     const PIECES = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' };
     const PIECES_KEYS = { queen: 'q', rook: 'r', bishop: 'b', knight: 'n', pawn: 'p' };
-    const variant = ['chess', 'giveaway', 'horde', 'atomic', 'kingofthehill', 'racingkings', '3check', 'crazyhouse'][4];
     let pocketFen = '';
     let sentMove;
     let enPassant = '-';
@@ -14,6 +13,7 @@ console.log('CHEatSS is on!');
     let movesCounter = 1;
 
     sf = new Worker('assets/_nqpAj6/vendor/stockfish.js/stockfish.wasm.js');
+    const variant = sessionStorage.getItem('variant') || 'chess';
     sf.postMessage(`setoption name UCI_Variant value ${variant}`);
 
     sf.onmessage = function onmessage({ data }) {
