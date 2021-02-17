@@ -2,9 +2,38 @@ console.log('CHEatSS is on!');
 (function () {
     let sf;
     let _wsInstance;
-    const PAWNS = ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7'];
-    const PIECES = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' };
-    const PIECES_KEYS = { queen: 'q', rook: 'r', bishop: 'b', knight: 'n', pawn: 'p' };
+    const PAWNS = [
+        'a2',
+        'b2',
+        'c2',
+        'd2',
+        'e2',
+        'f2',
+        'g2',
+        'h2',
+        'a7',
+        'b7',
+        'c7',
+        'd7',
+        'e7',
+        'f7',
+        'g7',
+        'h7',
+    ];
+    const PIECES = {
+        q: 'queen',
+        r: 'rook',
+        b: 'bishop',
+        n: 'knight',
+        p: 'pawn',
+    };
+    const PIECES_KEYS = {
+        queen: 'q',
+        rook: 'r',
+        bishop: 'b',
+        knight: 'n',
+        pawn: 'p',
+    };
     let pocketFen = '';
     let sentMove;
     let enPassant = '-';
@@ -23,14 +52,17 @@ console.log('CHEatSS is on!');
             const mateIn = data.slice(mateIndex, mateIndex + 7);
             if (foundMate !== mateIn) {
                 foundMate = mateIn;
-                console.log('Hey!!! found ' + mateIn)
+                console.log('Hey!!! found ' + mateIn);
             }
         }
         if (data.startsWith('info string variant')) console.log(data);
         if (data.indexOf('bestmove') !== -1) {
             const move = { t: 'move', d: {} };
             const recommendedMove = data.split(' ')[1];
-            if (variant === 'crazyhouse' && recommendedMove.indexOf('@') !== -1) {
+            if (
+                variant === 'crazyhouse' &&
+                recommendedMove.indexOf('@') !== -1
+            ) {
                 const [role, pos] = recommendedMove.split('@');
                 move.t = 'drop';
                 move.d.role = PIECES[role.toLowerCase()];
@@ -50,8 +82,12 @@ console.log('CHEatSS is on!');
             if (movesCounter < 3) {
                 clock.white = clock.black = 15;
             }
-            sf.postMessage(`position fen ${fen}${pocketFen} ${playerColor} ${castlingFen} ${enPassant}`);
-            sf.postMessage(`go wtime ${clock.white * 1000} btime ${clock.black * 1000}`);
+            sf.postMessage(
+                `position fen ${fen}${pocketFen} ${playerColor} ${castlingFen} ${enPassant}`
+            );
+            sf.postMessage(
+                `go wtime ${clock.white * 1000} btime ${clock.black * 1000}`
+            );
         }
     }
 
@@ -70,10 +106,14 @@ console.log('CHEatSS is on!');
     function createPocket(whitePocket, blackPocket) {
         let tempPocket = '[';
         for (const key in whitePocket) {
-            tempPocket += PIECES_KEYS[key].repeat(whitePocket[key]).toUpperCase();
+            tempPocket += PIECES_KEYS[key]
+                .repeat(whitePocket[key])
+                .toUpperCase();
         }
         for (const key in blackPocket) {
-            tempPocket += PIECES_KEYS[key].repeat(blackPocket[key]).toLowerCase();
+            tempPocket += PIECES_KEYS[key]
+                .repeat(blackPocket[key])
+                .toLowerCase();
         }
         tempPocket += ']';
         return tempPocket;
@@ -144,5 +184,9 @@ console.log('CHEatSS is on!');
     };
 
     exportFunction(window.WebSocket, window, { defineAs: 'WebSocket' });
-    exportFunction(window.WebSocket.prototype.send, window.WebSocket.prototype, { defineAs: 'send' });
+    exportFunction(
+        window.WebSocket.prototype.send,
+        window.WebSocket.prototype,
+        { defineAs: 'send' }
+    );
 })();
