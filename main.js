@@ -11,17 +11,26 @@ console.log('CHEatSS is on!');
     let playerColor = 'w';
     let castlingFen = 'KQkq';
     let movesCounter = 1;
+    let foundMate = '';
 
     sf = new Worker('assets/_nqpAj6/vendor/stockfish.js/stockfish.wasm.js');
     const variant = sessionStorage.getItem('variant') || 'chess';
     sf.postMessage(`setoption name UCI_Variant value ${variant}`);
 
     sf.onmessage = function onmessage({ data }) {
+        const mateIndex = data.indexOf('mate');
+        if (mateIndex !== -1) {
+            const mateIn = data.slice(mateIndex, mateIndex + 7);
+            if (foundMate !== mateIn) {
+                foundMate = mateIn;
+                console.log('Hey!!! found ' + mateIn)
+            }
+        }
         if (data.startsWith('info string variant')) console.log(data);
-        if (data.indexOf('bestmove') > -1) {
+        if (data.indexOf('bestmove') !== -1) {
             const move = { t: 'move', d: {} };
             const recommendedMove = data.split(' ')[1];
-            if (variant === 'crazyhouse' && recommendedMove.indexOf('@') > -1) {
+            if (variant === 'crazyhouse' && recommendedMove.indexOf('@') !== -1) {
                 const [role, pos] = recommendedMove.split('@');
                 move.t = 'drop';
                 move.d.role = PIECES[role.toLowerCase()];
@@ -29,8 +38,10 @@ console.log('CHEatSS is on!');
             }
             move.d.u = recommendedMove;
             move.d.a = Math.ceil(movesCounter / 2);
-            _wsInstance.send(JSON.stringify(move));
-            console.log('move ===> ', JSON.stringify(move));
+            if (foundMate) {
+                _wsInstance.send(JSON.stringify(move));
+                console.log('move ===> ', JSON.stringify(move));
+            }
         }
     };
 
@@ -47,7 +58,7 @@ console.log('CHEatSS is on!');
     function setEnPassant(move) {
         const index = PAWNS.indexOf(move.slice(0, 2));
         enPassant = '-';
-        if (index > -1) {
+        if (index !== -1) {
             PAWNS.splice(index, 1);
             if (Math.abs(move[1] - move[3]) === 2) {
                 enPassant = move[0];
