@@ -1,17 +1,40 @@
-const VARIANTS = ['chess', 'giveaway', 'horde', 'atomic', 'kingofthehill', 'racingkings', '3check', 'crazyhouse'];
+const VARIANTS = [
+    'chess',
+    'giveaway',
+    'horde',
+    'atomic',
+    'kingofthehill',
+    'racingkings',
+    '3check',
+    'crazyhouse',
+];
 
 /**
  * Listen for clicks on the buttons, and send the appropriate message to
  * the content script in the page.
  */
 function listenForClicks() {
-    document.addEventListener('click', (e) => {
+    // const engineStatus = sessionStorage.getItem('engine') || 'on';
+    // document
+    //     .querySelector(`input[value=${engineStatus}]`)
+    //     .setAttribute('checked', 'checked');
+
+    document.addEventListener('click', e => {
         if (e.target.classList.contains('variant')) {
             browser.tabs
                 .query({ active: true, currentWindow: true })
-                .then((tabs) => {
+                .then(tabs => {
                     browser.tabs.sendMessage(tabs[0].id, {
                         variant: e.target.textContent,
+                    });
+                })
+                .catch(console.error);
+        } else if (e.target.classList.contains('engine')) {
+            browser.tabs
+                .query({ active: true, currentWindow: true })
+                .then(tabs => {
+                    browser.tabs.sendMessage(tabs[0].id, {
+                        cheatOff: e.target.value === 'off',
                     });
                 })
                 .catch(console.error);
@@ -26,7 +49,9 @@ function listenForClicks() {
 function reportExecuteScriptError(error) {
     document.querySelector('#popup-content').classList.add('hidden');
     document.querySelector('#error-content').classList.remove('hidden');
-    console.error(`Failed to execute beastify content script: ${error.message}`);
+    console.error(
+        `Failed to execute beastify content script: ${error.message}`
+    );
 }
 
 /**
@@ -34,4 +59,7 @@ function reportExecuteScriptError(error) {
  * and add a click handler.
  * If we couldn't inject the script, handle the error.
  */
-browser.tabs.executeScript({ file: '/popup/content_script.js' }).then(listenForClicks).catch(reportExecuteScriptError);
+browser.tabs
+    .executeScript({ file: '/popup/content_script.js' })
+    .then(listenForClicks)
+    .catch(reportExecuteScriptError);

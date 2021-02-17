@@ -1,7 +1,5 @@
-console.log('CHEatSS is on!');
+console.log('CHEatSS is ' + (sessionStorage.getItem('cheatOff') ? 'off' : 'on'));
 (function () {
-    let sf;
-    let _wsInstance;
     const PAWNS = [
         'a2',
         'b2',
@@ -34,13 +32,19 @@ console.log('CHEatSS is on!');
         knight: 'n',
         pawn: 'p',
     };
-    let pocketFen = '';
+    let sf;
+    let _wsInstance;
     let sentMove;
-    let enPassant = '-';
     let playerColor = 'w';
-    let castlingFen = 'KQkq';
     let movesCounter = 1;
-    let foundMate = '';
+
+    let pocketFen = '';
+    let enPassantFen = '-';
+    let castlingFen = 'KQkq';
+
+    let mateOnlyMode = sessionStorage.getItem('mateOnlyMode');
+    let foundMate = false;
+    let prevMate = '';
 
     sf = new Worker('assets/_nqpAj6/vendor/stockfish.js/stockfish.wasm.js');
     const variant = sessionStorage.getItem('variant') || 'chess';
@@ -49,9 +53,11 @@ console.log('CHEatSS is on!');
     sf.onmessage = function onmessage({ data }) {
         const mateIndex = data.indexOf('mate');
         if (mateIndex !== -1) {
+            foundMate = true;
+            // let the player knows you found mate..
             const mateIn = data.slice(mateIndex, mateIndex + 7);
-            if (foundMate !== mateIn) {
-                foundMate = mateIn;
+            if (prevMate !== mateIn) {
+                prevMate = mateIn;
                 console.log('Hey!!! found ' + mateIn);
             }
         }
@@ -70,10 +76,18 @@ console.log('CHEatSS is on!');
             }
             move.d.u = recommendedMove;
             move.d.a = Math.ceil(movesCounter / 2);
-            if (foundMate) {
-                _wsInstance.send(JSON.stringify(move));
-                console.log('move ===> ', JSON.stringify(move));
+
+            const cheatOff = sessionStorage.getItem('cheatOff');
+            if (!cheatOff) {
+                if (mateOnlyMode && foundMate) {
+                    _wsInstance.send(JSON.stringify(move));
+                    console.log('move ===> ', JSON.stringify(move));
+                } else if (!mateOnlyMode) {
+                    _wsInstance.send(JSON.stringify(move));
+                    console.log('move ===> ', JSON.stringify(move));
+                }
             }
+            console.log('engine status', cheatOff, mateOnlyMode);
         }
     };
 
@@ -83,7 +97,7 @@ console.log('CHEatSS is on!');
                 clock.white = clock.black = 15;
             }
             sf.postMessage(
-                `position fen ${fen}${pocketFen} ${playerColor} ${castlingFen} ${enPassant}`
+                `position fen ${fen}${pocketFen} ${playerColor} ${castlingFen} ${enPassantFen}`
             );
             sf.postMessage(
                 `go wtime ${clock.white * 1000} btime ${clock.black * 1000}`
@@ -93,12 +107,12 @@ console.log('CHEatSS is on!');
 
     function setEnPassant(move) {
         const index = PAWNS.indexOf(move.slice(0, 2));
-        enPassant = '-';
+        enPassantFen = '-';
         if (index !== -1) {
             PAWNS.splice(index, 1);
             if (Math.abs(move[1] - move[3]) === 2) {
-                enPassant = move[0];
-                enPassant += move[1] === '2' ? '3' : '6';
+                enPassantFen = move[0];
+                enPassantFen += move[1] === '2' ? '3' : '6';
             }
         }
     }
